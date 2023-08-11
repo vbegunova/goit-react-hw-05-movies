@@ -6,7 +6,6 @@ import { Section } from './Home.styled';
 
 const Home = () => {
   const [trending, setTrending] = useState([]);
-  console.log(trending);
 
   useEffect(() => {
     const fetch = async () => {

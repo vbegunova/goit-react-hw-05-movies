@@ -1,3 +1,4 @@
+import Loader from 'components/Loader/Loader';
 import ReviewItem from 'components/ReviewItem/ReviewItem';
 import { useEffect } from 'react';
 import { useState } from 'react';
@@ -7,22 +8,42 @@ import { fetchReviews } from 'services/api';
 const Reviews = () => {
   const { movieId } = useParams();
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
-      const response = await fetchReviews(movieId);
-      console.log(response.results);
-      setData(response.results);
+      try {
+        setIsLoading(true);
+        const response = await fetchReviews(movieId);
+
+        if (response.total_results === 0) {
+          setError("We don't have any reviews for this movie.");
+          return;
+        }
+
+        setData(response.results);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetch();
   }, [movieId]);
 
   return (
-    <ul>
-      {data.map(({ id, author, content }) => {
-        return <ReviewItem key={id} author={author} content={content} />;
-      })}
-    </ul>
+    <>
+      {isLoading && <Loader />}
+      {error && <p>{error}</p>}
+      {data[0] && (
+        <ul>
+          {data.map(({ id, author, content }) => {
+            return <ReviewItem key={id} author={author} content={content} />;
+          })}
+        </ul>
+      )}
+    </>
   );
 };
 

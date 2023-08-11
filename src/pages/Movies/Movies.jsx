@@ -1,32 +1,34 @@
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { fecthMovie } from 'services/api';
+import { Button, Form, Input } from './Movies.styled';
+import { MovieItem } from 'components/TrendingMovie/TrendingMovie.styled';
 
 const Movies = () => {
-  const [query, setQuery] = useState('');
   const [data, setData] = useState([]);
-
-  const handleSubmit = e => {
-    e.preventDefault();
-    const { queryInput } = e.target;
-
-    const normilizedQuery = queryInput.value.toLowerCase().trim();
-
-    setQuery(normilizedQuery);
-
-    e.target.reset();
-  };
+  const [error, setError] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('query') ?? '';
+  const location = useLocation();
 
   useEffect(() => {
     if (query === '') {
+      setData([]);
       return;
     }
 
     const fetch = async () => {
       try {
+        setError(null);
+        setData([]);
         const response = await fecthMovie(query);
-        console.log(response);
+        if (response.total_results === 0) {
+          setError(
+            "Oops, looks like we don't have any film with that title :("
+          );
+          return;
+        }
         setData(response.results);
       } catch (error) {
         console.log(error);
@@ -35,18 +37,36 @@ const Movies = () => {
     fetch();
   }, [query]);
 
+  const handleSubmit = e => {
+    e.preventDefault();
+    const { queryInput } = e.target;
+
+    const normilizedQuery = queryInput.value.toLowerCase().trim();
+
+    if (normilizedQuery === '') {
+      return setSearchParams({});
+    }
+
+    setSearchParams({ query: normilizedQuery });
+
+    e.target.reset();
+  };
+
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <input type="text" name="queryInput" />
-        <button type="submit">Search</button>
-      </form>
+      <Form onSubmit={handleSubmit}>
+        <Input type="text" name="queryInput" />
+        <Button type="submit">Search</Button>
+      </Form>
+      {error && <p>{error}</p>}
       <ul>
         {data.map(item => {
           return (
-            <li key={item.id}>
-              <Link to={`/movies/${item.id}`}>{item.title}</Link>
-            </li>
+            <MovieItem key={item.id}>
+              <Link to={`/movies/${item.id}`} state={{ from: location }}>
+                {item.title}
+              </Link>
+            </MovieItem>
           );
         })}
       </ul>
