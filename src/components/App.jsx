@@ -15,7 +15,6 @@ const NotFound = lazy(() => import('../pages/NotFound'))
 const Cast = lazy(() => import('./Cast'))
 const Reviews = lazy(() => import('./Reviews'))
 
-
 export const App = () => {
   return (
     <div>
